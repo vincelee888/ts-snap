@@ -1,5 +1,5 @@
 import { greeter } from '../src/example'
 
-test('adds 1 + 2 to equal 3', () => {
+test('greeter uses the correct name', () => {
     expect(greeter('Rick and Morty')).toBe('Hello, Rick and Morty');
 });
