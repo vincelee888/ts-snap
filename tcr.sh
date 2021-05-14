@@ -20,7 +20,7 @@ echo "--------------------------------------------------"
 sleep $MSG_PAUSE_PERIOD_S
 echo "take baby steps, commit working code, and keep those tests green!"
 sleep $MSG_PAUSE_PERIOD_S
-echo "if your tests aren't passing every $LOOP_PAUSE_PERIOD_S, your code will be reverted!"
+echo "if your tests aren't passing every $LOOP_PAUSE_PERIOD_S seconds, your code will be reverted!"
 sleep $MSG_PAUSE_PERIOD_S
 echo "ready..."
 sleep $MSG_PAUSE_PERIOD_S
