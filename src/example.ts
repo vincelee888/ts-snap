@@ -1,13 +1,16 @@
 export type Card = {}
 
-type Snap = {
+export type Snap = {
   pile: Set<Card>,
-  player1Hand: Set<Card>,
-  player2Hand: Set<Card>,
+  hands: {
+    player1: Set<Card>,
+    player2: Set<Card>
+  }
+  nextPlayer: Player
 }
 
-type OpenPlay = Snap & {
-  placeCard: (player: Player) => Snap
+export type OpenPlay = Snap & {
+  placeCard: (player: Player) => OpenPlay
 }
 
 type Player = 'player1' | 'player2'
@@ -17,10 +20,13 @@ export const startGame = (deck: Set<Card>, totalPlayers: number = 2): OpenPlay =
 
   const pile = new Set<Card>()
 
-  const initialState = {
+  const initialState: Snap = {
     pile,
-    player1Hand,
-    player2Hand,
+    hands: {
+      player1: player1Hand,
+      player2: player2Hand
+    },
+    nextPlayer: 'player1'
   }
   return {
     ...initialState,
@@ -30,11 +36,25 @@ export const startGame = (deck: Set<Card>, totalPlayers: number = 2): OpenPlay =
 
 const getPlaceCard = (state: Snap): (player: Player) => OpenPlay => {
   return (player: Player) => {
-    const [card, ...hand] = Array.from(state.player1Hand.values())
-    const newState = {
+    if(state.nextPlayer !== player) {
+      return {
+        ...state,
+        placeCard: getPlaceCard(state)
+      }
+    }
+
+    const otherPlayer = player === "player1" ? "player2" : "player1"
+
+    const [card, ...hand] = Array.from(state.hands[player].values())
+
+    const hands:any = {}
+    hands[otherPlayer] = state.hands[otherPlayer]
+    hands[player] = new Set(hand)
+
+    const newState: Snap = {
       pile: state.pile.add(card),
-      player1Hand: new Set(hand),
-      player2Hand: state.player2Hand
+      hands,
+      nextPlayer: 'player2'
     }
 
     return {
