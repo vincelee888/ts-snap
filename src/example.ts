@@ -10,7 +10,8 @@ export type Snap = {
 }
 
 export type OpenPlay = Snap & {
-  placeCard: (player: Player) => OpenPlay
+  placeCard: (player: Player) => OpenPlay,
+  callSnap: (player: Player) => OpenPlay
 }
 
 type Player = 'player1' | 'player2'
@@ -28,19 +29,13 @@ export const startGame = (deck: Set<Card>, totalPlayers: number = 2): OpenPlay =
     },
     nextPlayer: 'player1'
   }
-  return {
-    ...initialState,
-    placeCard: getPlaceCard(initialState)
-  }
+  return buildNextPlay(initialState)
 }
 
 const getPlaceCard = (state: Snap): (player: Player) => OpenPlay => {
   return (player: Player) => {
     if(state.nextPlayer !== player) {
-      return {
-        ...state,
-        placeCard: getPlaceCard(state)
-      }
+      return buildNextPlay(state)
     }
 
     const otherPlayer = player === "player1" ? "player2" : "player1"
@@ -57,12 +52,15 @@ const getPlaceCard = (state: Snap): (player: Player) => OpenPlay => {
       nextPlayer: 'player2'
     }
 
-    return {
-      ...newState,
-      placeCard: getPlaceCard(newState)
-    }
+    return buildNextPlay(newState)
   }
 }
+
+const buildNextPlay = (state: Snap) => ({
+  ...state,
+  placeCard: getPlaceCard(state),
+  callSnap: getPlaceCard(state),
+})
 
 const dealCards = (deck: Set<Card>, totalPlayers: number) => {
   const hands = new Array(totalPlayers)

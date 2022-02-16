@@ -51,4 +51,13 @@ describe('snap', () => {
             expect(result.hands.player2.size).toEqual(0)
         })
     })
+
+    describe('calling snap', () => {
+        it('calling an invalid snap does nothing', () => {
+            const result = game.callSnap('player2')
+
+            expect(result.hands.player1.size).toEqual(1)
+            expect(result.hands.player2.size).toEqual(1)
+        })
+    })
 })
