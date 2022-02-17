@@ -1,4 +1,10 @@
-export type Card = {}
+export type Suit = 'Hearts' | 'Spades' | 'Clubs' | 'Diamonds'
+export type Value = 'A' | 'K'
+
+export type Card = {
+  suit: Suit,
+  value: Value
+}
 
 export type Snap = {
   pile: Set<Card>,
@@ -6,7 +12,8 @@ export type Snap = {
     player1: Set<Card>,
     player2: Set<Card>
   }
-  nextPlayer: Player
+  nextPlayer: Player,
+  winner?: Player
 }
 
 export type OpenPlay = Snap & {
@@ -38,7 +45,7 @@ const getPlaceCard = (state: Snap): (player: Player) => OpenPlay => {
       return buildNextPlay(state)
     }
 
-    const otherPlayer = player === "player1" ? "player2" : "player1"
+    const otherPlayer = getOtherPlayer(player)
 
     const [card, ...hand] = Array.from(state.hands[player].values())
 
@@ -49,17 +56,46 @@ const getPlaceCard = (state: Snap): (player: Player) => OpenPlay => {
     const newState: Snap = {
       pile: state.pile.add(card),
       hands,
-      nextPlayer: 'player2'
+      nextPlayer: hands[otherPlayer].size > 0 ? otherPlayer : player
     }
 
     return buildNextPlay(newState)
   }
 }
 
+const getCallSnap = (state: Snap): (player: Player) => OpenPlay => {
+  return (player: Player) => {
+    const [first, second, ..._] = Array.from(state.pile.values()).reverse()
+
+    if(first && second && first.value === second.value) {
+      const otherPlayer = getOtherPlayer(player)
+
+      state.pile.forEach(pc => state.hands[player].add(pc))
+      
+      const hands:any = {}
+      hands[otherPlayer] = state.hands[otherPlayer]
+      hands[player] = state.hands[player]
+
+      const winner = state.hands[otherPlayer].size === 0 ? player : undefined
+
+      const newState: Snap = {
+        pile: new Set<Card>(),
+        hands,
+        nextPlayer: player,
+        winner
+      }
+
+      return buildNextPlay(newState)
+    }
+
+    return buildNextPlay(state)
+  }
+}
+
 const buildNextPlay = (state: Snap) => ({
   ...state,
   placeCard: getPlaceCard(state),
-  callSnap: getPlaceCard(state),
+  callSnap: getCallSnap(state),
 })
 
 const dealCards = (deck: Set<Card>, totalPlayers: number) => {
@@ -71,5 +107,9 @@ const dealCards = (deck: Set<Card>, totalPlayers: number) => {
     hands[handIndex].add(c)
   })
   return hands
+}
+
+const getOtherPlayer = (player: string) => {
+  return player === "player1" ? "player2" : "player1"
 }
 

@@ -1,9 +1,11 @@
-import { OpenPlay, Snap, startGame } from "../src/example"
+import { Card, OpenPlay, Snap, startGame } from "../src/example"
 
 describe('snap', () => {
-    const deck = new Set([
-        { suit : 'Hearts', value: 'A' },
-        { suit : 'Spades', value: 'A' },
+    const deck: Set<Card> = new Set([
+        { suit: 'Hearts', value: 'A' } as Card,
+        { suit: 'Spades', value: 'A' } as Card,
+        { suit: 'Hearts', value: 'K' } as Card,
+        { suit: 'Spades', value: 'K' } as Card,
     ])
 
     let game: OpenPlay
@@ -31,7 +33,7 @@ describe('snap', () => {
             const result = game.placeCard('player1')
 
             expect(result.pile.size).toEqual(1)
-            const playedCard = { suit: 'Hearts', value: 'A' }
+            const playedCard: Card = { suit: 'Hearts', value: 'A' }
             expect(result.pile.values().next().value).toEqual(playedCard)
             expect(result.hands.player1.has(playedCard)).toBeFalsy()
         })
@@ -47,17 +49,101 @@ describe('snap', () => {
                 .placeCard('player2')
 
             expect(result.pile.size).toEqual(2)
+            expect(result.hands.player1.size).toEqual(1)
+            expect(result.hands.player2.size).toEqual(1)
+        })
+
+        it('player1 goes after player2', () => {
+            const result = game
+                    .placeCard('player1')
+                    .placeCard('player2')
+                    .placeCard('player1')
+
+            expect(result.pile.size).toEqual(3)
             expect(result.hands.player1.size).toEqual(0)
-            expect(result.hands.player2.size).toEqual(0)
+            expect(result.hands.player2.size).toEqual(1)
         })
     })
 
     describe('calling snap', () => {
-        it('calling an invalid snap does nothing', () => {
+        it('snap on empty pile is invalid', () => {
             const result = game.callSnap('player2')
 
+            expect(result.hands.player1.size).toEqual(2)
+            expect(result.hands.player2.size).toEqual(2)
+        })
+        it('snap on single card in pile is invalid', () => {
+            const result = game
+                .placeCard('player1')
+                .callSnap('player1')
+
+            expect(result.pile.size).toEqual(1)
             expect(result.hands.player1.size).toEqual(1)
-            expect(result.hands.player2.size).toEqual(1)
+            expect(result.nextPlayer).toEqual('player2')
+        })
+        it('snap when last two cards have differet values is invalid', () => {
+            const result = game
+                .placeCard('player1')
+                .placeCard('player2')
+                .placeCard('player1')
+                .callSnap('player1')
+
+            expect(result.pile.size).toEqual(3)
+            expect(result.hands.player1.size).toEqual(0)
+            expect(result.nextPlayer).toEqual('player2')
+        })
+        it('player1 calls valid snap', () => {
+            const result = game
+                .placeCard('player1')
+                .placeCard('player2')
+                .callSnap('player1')
+
+            expect(result.pile.size).toEqual(0)
+            expect(result.hands.player1.size).toEqual(3)
+            expect(result.nextPlayer).toEqual('player1')
+            expect(result.winner).toBeUndefined()
+        })
+        it('player2 calls valid snap', () => {
+            const result = game
+                .placeCard('player1')
+                .placeCard('player2')
+                .callSnap('player2')
+
+            expect(result.pile.size).toEqual(0)
+            expect(result.hands.player2.size).toEqual(3)
+            expect(result.nextPlayer).toEqual('player2')
+        })
+    })
+
+    describe('end game', () => {
+        it('player with all the cards keeps placing cards', () => {
+            const result = game
+                .placeCard('player1')
+                .placeCard('player2')
+                .callSnap('player1')
+                .placeCard('player1')
+                .placeCard('player2')
+                .placeCard('player1')
+
+            expect(result.hands.player2.size).toEqual(0)
+            expect(result.hands.player1.size).toEqual(1)
+            expect(result.nextPlayer).toEqual('player1')
+        })
+        it('last card to be played is a snap', () => {
+            const result = game
+                .placeCard('player1')
+                .placeCard('player2')
+                .callSnap('player1')
+                .placeCard('player1')
+                .placeCard('player2')
+                .placeCard('player1')
+                .placeCard('player1')
+                .callSnap('player1')
+
+            expect(result.pile.size).toEqual(0)
+            expect(result.hands.player2.size).toEqual(0)
+            expect(result.hands.player1.size).toEqual(4)
+            expect(result.winner).toEqual('player1')
         })
     })
 })
