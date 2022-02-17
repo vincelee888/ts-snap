@@ -1,4 +1,4 @@
-import { Card, OpenPlay, Snap, startGame } from "../src/example"
+import { Card, SnapPlay, SnapState, startGame } from "../src/example"
 
 describe('snap', () => {
     const deck: Set<Card> = new Set([
@@ -8,7 +8,7 @@ describe('snap', () => {
         { suit: 'Spades', value: 'K' } as Card,
     ])
 
-    let game: OpenPlay
+    let game: SnapPlay
 
     beforeEach(() => {
         game = startGame(deck, 2)
@@ -19,7 +19,7 @@ describe('snap', () => {
             expect(game.pile.size).toEqual(0)
         })
 
-        it('should deal the half the deck to each player', () => {
+        it('should deal half the deck to each player', () => {
             const { player1, player2} = game.hands
 
             expect(player1.size).toEqual(deck.size / 2)
